@@ -1,6 +1,7 @@
 # OS
 .pydevproject
 .project
+*.pyc
 *.swp
 Thumbs.db
 *.sql.gz
