@@ -1,0 +1,8 @@
+# OS
+.pydevproject
+.project
+*.swp
+Thumbs.db
+*.sql.gz
+*.sql
+
