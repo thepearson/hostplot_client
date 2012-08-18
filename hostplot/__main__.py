@@ -2,8 +2,10 @@ import optparse
 import sys, os
 from core import Config
 from core import Client
+from core.Runner import Runner
 
 DEFAULT_APP_NAME="hostplot"
+DEFAULT_METRIC_NAME="metrics"
 DEFAULT_CONFIG_FILE="/etc/" + DEFAULT_APP_NAME + ".conf"
 DEFAULT_LIBRARY_PATH="/usr/local/lib/" + DEFAULT_APP_NAME
 DEFAULT_API_PROTOCOL='http'
@@ -13,14 +15,18 @@ DEFAULT_API_PATH=''
 SERVER_INIT_PATH='/host/activate'
 
 ###
-def main( ):
-  print "Running"
-  # get config to run
+def main(config):
+  print 'Running'
+  # check config for metrics to run
+  #   get metrics from server
+  #   update config
+
+  metrics = [{'key': 1, 'class': 'HostDetails', 'data': {'last_run': 1345245683, 'ttl': 3600}}, {'key': 2, 'class': 'LoadAvg', 'data': None}, {'key': 3, 'class': 'DiskFree', 'data': {'path': '/'}}]
   
-  # check that we have the latest 
-  # libraries for the required configs
-  
-  # run each of the configs
+  r = Runner(config, metrics)
+  response = r.run()
+  print response
+
     
 def initialize(code):
   print "Initializing " + code
@@ -45,51 +51,13 @@ def initialize(code):
   config = Config.Config(config_file)
   config.add('protocol', DEFAULT_API_PROTOCOL, 'api')
   config.add('host', DEFAULT_API_SERVER, 'api')
-  #config.add('port', DEFAULT_API_PORT, 'api')
   config.add('path', DEFAULT_API_PATH, 'api')
-
-  while True:
-    sys.stdout.write('Enter path to store libraries? [' + DEFAULT_LIBRARY_PATH + '] ')
-    module_dir = raw_input()
-    if str(module_dir).strip() == '':
-      module_dir = DEFAULT_LIBRARY_PATH
-    break
-  
-  while True:
-    if os.path.isdir(module_dir) is False:
-      sys.stdout.write('Library path [' + module_dir + '''] doesn't exist. Attempt to create it? : [Y/n] ''')
-      create = raw_input().lower()
-      if str(create).strip() == 'y':
-        print 'Creating library directory'
-        try:
-          os.makedirs(module_dir, 0775)
-          print 'Created successfully'
-          break
-        except OSError:
-          print 'Error creating library directory! Check permissions.'
-          exit()
-      elif str(create).strip() == 'n':
-        print 'Exiting.'
-        exit()
-    else:
-      print 'Library directory exists checking for write permission'
-      try:
-        tmp = open(module_dir + '/touch', 'w')
-        tmp.close()
-        os.remove(module_dir + '/touch')
-      except:
-        print 'Library directory is not writable, check permissions.'
-      break
-  
-  # add the directory info
-  config.add('lib_dir', module_dir)
   config.add('code', code)
   
   print 'Initializing host with code "' + code +'"'
   client = Client.Client(protocol = DEFAULT_API_PROTOCOL, host = DEFAULT_API_SERVER)
   json = client.getRequest(SERVER_INIT_PATH + '/' + code)
-  
-  
+    
   obj = client.decodeResponse(json)
   if obj['status'] is 0:
     print 'Success'
@@ -119,5 +87,5 @@ if __name__ == "__main__":
     if opts.update is True:
       print "Updating code not implemented yet"
     else:
-      main(config)
+      main(opts.config)
   exit()

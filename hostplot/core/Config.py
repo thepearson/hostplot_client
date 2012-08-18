@@ -1,4 +1,5 @@
 import ConfigParser
+from compiler.pycodegen import EXCEPT
 
 class Config():
   def __init__(self, file):
@@ -18,3 +19,9 @@ class Config():
     f = open(self.file, 'w')
     self.parser.write(f)
     f.close()
+    
+  def get(self, variable, section = 'main'):
+    try:
+      return self.parser.get(section, variable)
+    except:
+      return None;
