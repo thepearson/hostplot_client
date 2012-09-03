@@ -21,8 +21,6 @@ class HostDetails(Metric):
   def run(self):
     uname = platform.uname()
     data = {
-            'system': uname[0],
-            'node': uname[1],
             'release': uname[2],
             'version': uname[3],
             'machine': uname[4],

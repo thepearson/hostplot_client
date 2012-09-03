@@ -6,8 +6,7 @@ class Metric():
   '''
   Apply any data if required
   '''
-  def __init__(self, config, data = None):
-    self.config = config
+  def __init__(self, data = None):
     self.data = data
   
   '''

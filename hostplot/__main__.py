@@ -1,31 +1,34 @@
+import sys
+import os
+import time
+import platform
 import optparse
-import sys, os
 from core import Config
 from core import Client
 from core.Runner import Runner
 
+APP_VERSION = 0.1
 DEFAULT_APP_NAME="hostplot"
 DEFAULT_METRIC_NAME="metrics"
-DEFAULT_CONFIG_FILE="/etc/" + DEFAULT_APP_NAME + ".conf"
+DEFAULT_CONFIG_FILE="/etc/hostplot/" + DEFAULT_APP_NAME + ".conf"
 DEFAULT_LIBRARY_PATH="/usr/local/lib/" + DEFAULT_APP_NAME
 DEFAULT_API_PROTOCOL='http'
-DEFAULT_API_SERVER="api.thepearson.co"
+DEFAULT_API_SERVER="hostplot.api.local"
 #DEFAULT_API_PORT='80'
 DEFAULT_API_PATH=''
-SERVER_INIT_PATH='/host/activate'
+SERVER_INIT_PATH='/host'
 
 ###
-def main(config):
-  print 'Running'
+def main(config_file):
+  config = Config.Config(config_file) 
   # check config for metrics to run
   #   get metrics from server
   #   update config
-
-  metrics = [{'key': 1, 'class': 'HostDetails', 'data': {'last_run': 1345245683, 'ttl': 3600}}, {'key': 2, 'class': 'LoadAvg', 'data': None}, {'key': 3, 'class': 'DiskFree', 'data': {'path': '/'}}]
-  
-  r = Runner(config, metrics)
-  response = r.run()
-  print response
+  metrics = [{'key': 'LoadAvg', 'data': None}]
+  r = Runner(metrics)
+  data = {"metrics": r.run(), "uuid": config.get('uuid')}
+  client = Client.Client(protocol = config.get('protocol', 'api'), host = config.get('host', 'api'))
+  client.postRequest(action=config.get('metric_path', 'api'), args=data)
 
     
 def initialize(code):
@@ -56,13 +59,16 @@ def initialize(code):
   
   print 'Initializing host with code "' + code +'"'
   client = Client.Client(protocol = DEFAULT_API_PROTOCOL, host = DEFAULT_API_SERVER)
-  json = client.getRequest(SERVER_INIT_PATH + '/' + code)
-    
+  # 'system': uname[0],
+  # 'node': uname[1],
+  json = client.getRequest(SERVER_INIT_PATH + '/' + code + '/activate')  
   obj = client.decodeResponse(json)
+  
   if obj['status'] is 0:
     print 'Success'
     host_uuid = obj['result']['uuid']
     config.add('uuid', host_uuid)
+    updateHostInfo(obj['result'])
   else:
     print 'Failed: ' + obj['message']
     exit()
@@ -71,6 +77,27 @@ def initialize(code):
   print '*\t*\t*\t*\t*\tpython ' +  os.getcwd() + '/' + DEFAULT_APP_NAME + ' -c ' + config_file
   config.save()
   exit()
+  
+  
+def update(config_file):
+  config = Config.Config(config_file)
+  uuid = config.get('uuid')
+  client = Client.Client(protocol = DEFAULT_API_PROTOCOL, host = DEFAULT_API_SERVER)
+  json = client.getRequest(SERVER_INIT_PATH + '/' + uuid)  
+  obj = client.decodeResponse(json)
+  updateHostInfo(obj['result'])
+  
+  
+def updateHostInfo(model):
+  model['client_version'] = APP_VERSION
+  model['hostname'] = platform.node()
+  model['platform'] = platform.system()
+  client = Client.Client(protocol = DEFAULT_API_PROTOCOL, host = DEFAULT_API_SERVER, debug = True)
+  json = client.putRequest(SERVER_INIT_PATH + '/' + str(model['id']), model)
+  obj = client.decodeResponse(json)
+  print obj
+  return
+  
 
 if __name__ == "__main__":
   # parse cmd line arguments
@@ -85,7 +112,14 @@ if __name__ == "__main__":
     initialize(opts.init)
   else:
     if opts.update is True:
-      print "Updating code not implemented yet"
+      if opts.config is not None:
+        update(opts.config)
+      else:
+        update(DEFAULT_CONFIG_FILE)
     else:
-      main(opts.config)
+      if opts.config is not None:
+        main(opts.config)
+      else:
+        main(DEFAULT_CONFIG_FILE)
+      
   exit()

@@ -21,11 +21,28 @@ class Client():
     return urllib2.urlopen(url).read()
       
   def postRequest(self, action, args=None):
-    if args is not None:
-      encoded_args = urllib.urlencode(args)
-      return urllib2.urlopen(self.protocol + '://' + self.host + self.root_path + action, encoded_args).read()
-    else:
-      return urllib2.urlopen(self.protocol + '://' + self.host + self.root_path + action).read()
+    # encoded_args = urllib.urlencode(args)
+    opener = urllib2.build_opener(urllib2.HTTPHandler)
+    request = urllib2.Request(self.protocol + '://' + self.host + self.root_path + action, data=json.dumps(args))
+    request.add_header('Content-Type', 'application/json')
+    request.get_method = lambda: 'POST'
+    return opener.open(request).read()
+
+  def putRequest(self, action, args=None):
+    # encoded_args = urllib.urlencode(args)
+    opener = urllib2.build_opener(urllib2.HTTPHandler)
+    request = urllib2.Request(self.protocol + '://' + self.host + self.root_path + action, data=json.dumps(args))
+    request.add_header('Content-Type', 'application/json')
+    request.get_method = lambda: 'PUT'
+    return opener.open(request).read()
+
+  def deleteRequest(self, action, args=None):
+    # encoded_args = urllib.urlencode(args)
+    opener = urllib2.build_opener(urllib2.HTTPHandler)
+    request = urllib2.Request(self.protocol + '://' + self.host + self.root_path + action)
+    request.add_header('Content-Type', 'application/json')
+    request.get_method = lambda: 'DELETE'
+    return opener.open(request).read()
     
   def decodeResponse(self, response):
     return json.loads(response)
