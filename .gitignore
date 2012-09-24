@@ -6,4 +6,5 @@
 Thumbs.db
 *.sql.gz
 *.sql
-
+.settings
+.settings/*
