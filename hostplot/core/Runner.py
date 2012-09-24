@@ -1,8 +1,7 @@
 import time
 from metrics.Metric import Metric
-from metrics.HostDetails import HostDetails
 from metrics.LoadAvg import LoadAvg
-from metrics.DiskFree import DiskFree
+from metrics.Memory import Memory
 
 class Runner():
   '''
@@ -16,31 +15,33 @@ class Runner():
     response = {}
     for m in self.metrics:
       c = m['key']
-      if c is 'HostDetails':
-        data = {'ttl': 3600, 'last_run': 0}
-        if m['data'] is not None:
-          data = m['data']
-        metric = HostDetails(data)
-      elif c is 'LoadAvg':
-        if m['data'] is not None:
-          data = m['data']
-        else:
-          data = None
+      if m['data'] is not None:
+        data = m['data']
+      else:
+        data = None
+
+      if c.lower() == 'loadavg':
         metric = LoadAvg(data)
-      elif c is 'DiskFree':
-        data = {'path': '/'}
-        if m['data'] is not None:
-          data = m['data']
-        metric = DiskFree(data)
+      elif c.lower() == 'memory':         
+        metric = Memory(data)
+      else:
+        print 'unknown metric'
+
       if metric.runnable() is True:
         metric.pre()
+
         if metric.requirements() is True:
-          data = metric.run()
-          if metric.validate(data) is True:
-            response[c] = data
-          else:
+          metric.run()
+          if metric.validate() is not True:
             print 'Data validation failed'
         else:
           print 'System requirements failed'
+          
         metric.post()
+      
+      if len(metric.messages) is not 0:
+        response[c] = metric.messages
+      else:
+        response[c] = metric.data
+    
     return {str(int(time.time())): response}

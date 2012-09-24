@@ -24,15 +24,25 @@ class Client():
     # encoded_args = urllib.urlencode(args)
     opener = urllib2.build_opener(urllib2.HTTPHandler)
     request = urllib2.Request(self.protocol + '://' + self.host + self.root_path + action, data=json.dumps(args))
-    request.add_header('Content-Type', 'application/json')
+    request.add_header('Accept', 'application/json')
     request.get_method = lambda: 'POST'
     return opener.open(request).read()
+    
 
   def putRequest(self, action, args=None):
     # encoded_args = urllib.urlencode(args)
+    '''
+    request = urllib2.Request(self.protocol + '://' + self.host + self.root_path + action, data=json.dumps(args))
+    request.add_header('Accept', 'application/json')
+    request.add_header('Content-Type', 'application/json')
+    f = urllib2.urlopen(request)
+    response = f.read()
+    f.close()
+    return response
+    '''
     opener = urllib2.build_opener(urllib2.HTTPHandler)
     request = urllib2.Request(self.protocol + '://' + self.host + self.root_path + action, data=json.dumps(args))
-    request.add_header('Content-Type', 'application/json')
+    request.add_header('Accept', 'application/json')
     request.get_method = lambda: 'PUT'
     return opener.open(request).read()
 

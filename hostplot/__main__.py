@@ -3,14 +3,16 @@ import os
 import time
 import platform
 import optparse
+
 from core import Config
-from core import Client
+from core.Api import *
+from core.Metrics import Metrics
 from core.Runner import Runner
 
 APP_VERSION = 0.1
 DEFAULT_APP_NAME="hostplot"
 DEFAULT_METRIC_NAME="metrics"
-DEFAULT_CONFIG_FILE="/etc/hostplot/" + DEFAULT_APP_NAME + ".conf"
+DEFAULT_CONFIG_FILE="/etc/" + DEFAULT_APP_NAME + ".conf"
 DEFAULT_LIBRARY_PATH="/usr/local/lib/" + DEFAULT_APP_NAME
 DEFAULT_API_PROTOCOL='http'
 DEFAULT_API_SERVER="hostplot.api.local"
@@ -18,19 +20,29 @@ DEFAULT_API_SERVER="hostplot.api.local"
 DEFAULT_API_PATH=''
 SERVER_INIT_PATH='/host'
 
-###
-def main(config_file):
-  config = Config.Config(config_file) 
-  # check config for metrics to run
-  #   get metrics from server
-  #   update config
-  metrics = [{'key': 'LoadAvg', 'data': None}]
+'''
+Run default action
+'''
+def main(config, dry):
+  
+  # Get the metrics
+  metrics = Metrics(config).get();
+  
+  # Create an instance of the runner, this
+  # will run all the metrics passed in
   r = Runner(metrics)
   data = {"metrics": r.run(), "uuid": config.get('uuid')}
-  client = Client.Client(protocol = config.get('protocol', 'api'), host = config.get('host', 'api'))
-  client.postRequest(action=config.get('metric_path', 'api'), args=data)
-
-    
+  
+  if dry is not True:
+    # returned data
+    api = MetricsApi(config).saveHostMetrics(data)
+  else:
+    print data
+  
+  
+'''
+Initialize the host
+'''    
 def initialize(code):
   print "Initializing " + code
 
@@ -79,8 +91,8 @@ def initialize(code):
   exit()
   
   
-def update(config_file):
-  config = Config.Config(config_file)
+def update(config):
+  #config = Config.Config(config_file)
   uuid = config.get('uuid')
   client = Client.Client(protocol = DEFAULT_API_PROTOCOL, host = DEFAULT_API_SERVER)
   json = client.getRequest(SERVER_INIT_PATH + '/' + uuid)  
@@ -113,13 +125,17 @@ if __name__ == "__main__":
   else:
     if opts.update is True:
       if opts.config is not None:
-        update(opts.config)
+        update(Config.Config(opts.config))
       else:
-        update(DEFAULT_CONFIG_FILE)
+        update(Config.Config(DEFAULT_CONFIG_FILE))
     else:
+      dry = False
+      if opts.dry is not None:
+        dry = True
+        
       if opts.config is not None:
-        main(opts.config)
+        main(Config.Config(opts.config), dry)
       else:
-        main(DEFAULT_CONFIG_FILE)
+        main(Config.Config(DEFAULT_CONFIG_FILE), dry)
       
   exit()

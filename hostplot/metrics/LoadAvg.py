@@ -7,33 +7,30 @@ from Metric import Metric
 class LoadAvg(Metric):
 
   def requirements(self):
-    messages = []
     if hasattr(os, 'getloadavg') and callable(getattr(os, 'getloadavg')):
       return True;
     else:
-      messages.append('getloadavg() method not found in package os')
-      return messages
+      self.messages.append('getloadavg() method not found in package os')
+      return False
 
   def run(self):
     load = os.getloadavg()
-    data = {'one': load[0], 'five': load[1], 'fifteen': load[2]}
-    return data
+    self.data = {'one': load[0], 'five': load[1], 'fifteen': load[2]}
 
-  def validate(self, result):
-    messages = []
-    if len(result) is not 3:
-      messages.append('Data length was not expected, expected 3, got ' + str(len(result)))
+  def validate(self):
+    if len(self.data) is not 3:
+      self.messages.append('Data length was not expected, expected 3, got ' + str(len(self.data)))
 
-    if float(result["one"]) < 0.0 or float(result["one"]) > 9999:
-      messages.append('The value of 1 minute load average appears wrong')
+    if float(self.data["one"]) < 0.0 or float(self.data["one"]) > 9999:
+      self.messages.append('The value of 1 minute load average appears wrong')
     
-    if float(result["five"]) < 0.0 or float(result["five"]) > 9999:
-      messages.append('The value of 5 minute load average appears wrong')
+    if float(self.data["five"]) < 0.0 or float(self.data["five"]) > 9999:
+      self.messages.append('The value of 5 minute load average appears wrong')
     
-    if float(result["fifteen"]) < 0.0 or float(result["fifteen"]) > 9999:
-      messages.append('The value of 15 minute load average appears wrong')
+    if float(self.data["fifteen"]) < 0.0 or float(self.data["fifteen"]) > 9999:
+      self.messages.append('The value of 15 minute load average appears wrong')
     
-    if len(messages) is 0:
+    if len(self.messages) is 0:
       return True
     else:
-      return messages
+      return False

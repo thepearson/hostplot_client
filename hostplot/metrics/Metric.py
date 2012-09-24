@@ -3,6 +3,13 @@ Base class for all metrics
 '''
 class Metric():
 
+  """ any messages to be aware of """  
+  messages = []
+  
+  
+  """ data from metric """
+  data = {}
+
   '''
   Apply any data if required
   '''
