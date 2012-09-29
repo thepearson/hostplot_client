@@ -6,12 +6,14 @@ import optparse
 
 from core import Config
 from core.Api import *
+from core.Cache import Cache
 from core.Metrics import Metrics
 from core.Runner import Runner
 
 APP_VERSION = 0.1
 DEFAULT_APP_NAME="hostplot"
 DEFAULT_METRIC_NAME="metrics"
+DEFAULT_TMP_DIR='/tmp'
 DEFAULT_CONFIG_FILE="/etc/" + DEFAULT_APP_NAME + ".conf"
 DEFAULT_LIBRARY_PATH="/usr/local/lib/" + DEFAULT_APP_NAME
 DEFAULT_API_PROTOCOL='http'
@@ -24,25 +26,42 @@ SERVER_INIT_PATH='/host'
 Run default action
 '''
 def main(config, dry):
-  
+
   # Get the metrics
-  metrics = Metrics(config).get();
-  
+  metrics = Metrics(config, dry).get();
+
   # Create an instance of the runner, this
   # will run all the metrics passed in
   r = Runner(metrics)
-  data = {"metrics": r.run(), "uuid": config.get('uuid')}
-  
+
+  # load the cache
+  cache = Cache(DEFAULT_TMP_DIR + '/hostplot.cache')
+
+  metrics = r.run()
+  if cache.has_cache() is True:
+    metrics.update(cache.cache_get())
+
+  data = {"metrics": metrics, "uuid": config.get('uuid')}
+
   if dry is not True:
     # returned data
-    api = MetricsApi(config).saveHostMetrics(data)
+    api = MetricsApi(config)
+    reponse = api.saveHostMetrics(data)
+
+    if reponse is None:
+      print "Metrics not saved, transmission issues"
+      cache.cache_save(metrics)
+    else:
+      if cache.has_cache() is True:
+        cache.cache_clear()
+    print data
   else:
     print data
-  
-  
+
+
 '''
 Initialize the host
-'''    
+'''
 def initialize(code):
   print "Initializing " + code
 
@@ -68,14 +87,14 @@ def initialize(code):
   config.add('host', DEFAULT_API_SERVER, 'api')
   config.add('path', DEFAULT_API_PATH, 'api')
   config.add('code', code)
-  
+
   print 'Initializing host with code "' + code +'"'
   client = Client.Client(protocol = DEFAULT_API_PROTOCOL, host = DEFAULT_API_SERVER)
   # 'system': uname[0],
   # 'node': uname[1],
-  json = client.getRequest(SERVER_INIT_PATH + '/' + code + '/activate')  
+  json = client.getRequest(SERVER_INIT_PATH + '/' + code + '/activate')
   obj = client.decodeResponse(json)
-  
+
   if obj['status'] is 0:
     print 'Success'
     host_uuid = obj['result']['uuid']
@@ -84,22 +103,22 @@ def initialize(code):
   else:
     print 'Failed: ' + obj['message']
     exit()
-    
+
   print 'Host is now active, please set up the following cron job:\n\n\n'
   print '*\t*\t*\t*\t*\tpython ' +  os.getcwd() + '/' + DEFAULT_APP_NAME + ' -c ' + config_file
   config.save()
   exit()
-  
-  
+
+
 def update(config):
   #config = Config.Config(config_file)
   uuid = config.get('uuid')
   client = Client.Client(protocol = DEFAULT_API_PROTOCOL, host = DEFAULT_API_SERVER)
-  json = client.getRequest(SERVER_INIT_PATH + '/' + uuid)  
+  json = client.getRequest(SERVER_INIT_PATH + '/' + uuid)
   obj = client.decodeResponse(json)
   updateHostInfo(obj['result'])
-  
-  
+
+
 def updateHostInfo(model):
   model['client_version'] = APP_VERSION
   model['hostname'] = platform.node()
@@ -109,7 +128,7 @@ def updateHostInfo(model):
   obj = client.decodeResponse(json)
   print obj
   return
-  
+
 
 if __name__ == "__main__":
   # parse cmd line arguments
@@ -119,7 +138,7 @@ if __name__ == "__main__":
   parser.add_option('-u', '--update', action="store_true",  dest='update', help='Check for updates')
   parser.add_option('-d', '--dry-run', action="store_true", dest='dry', help='Dry run (no communication with server)')
   (opts, args) = parser.parse_args()
-  
+
   if opts.init is not None:
     initialize(opts.init)
   else:
@@ -132,10 +151,10 @@ if __name__ == "__main__":
       dry = False
       if opts.dry is not None:
         dry = True
-        
+
       if opts.config is not None:
         main(Config.Config(opts.config), dry)
       else:
         main(Config.Config(DEFAULT_CONFIG_FILE), dry)
-      
+
   exit()
