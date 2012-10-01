@@ -1,6 +1,5 @@
 import ConfigParser
 import json
-from compiler.pycodegen import EXCEPT
 
 
 '''
@@ -9,7 +8,7 @@ complicates things slightly but I wanted to abstract this
 out as this may change at a later date
 '''
 class Config():
-  
+
   '''
   Construct, takes a file path
   '''
@@ -25,7 +24,7 @@ class Config():
     self.parser.read(self.file)
 
   '''
-  adds a variable and value to a section, creates 
+  adds a variable and value to a section, creates
   the section if it doesn't exists
   '''
   def add(self, variable, value, section = 'main'):
@@ -49,7 +48,7 @@ class Config():
       return self.parser.getint(section, variable)
     except:
       return None;
-  
+
   '''
   Wrapper around parser.get()
   '''
@@ -58,7 +57,7 @@ class Config():
       return self.parser.get(section, variable)
     except:
       return None;
-    
+
   '''
   returns all items and values given a section
   '''

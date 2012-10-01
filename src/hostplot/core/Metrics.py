@@ -1,7 +1,7 @@
 import json
 import time
-from core.Api import *
-from core.Config import Config
+from hostplot.core.Api import *
+from hostplot.core.Config import Config
 
 '''
 This is a wrapper around the metrics

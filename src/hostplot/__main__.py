@@ -4,11 +4,11 @@ import time
 import platform
 import optparse
 
-from core import Config
-from core.Api import *
-from core.Cache import Cache
-from core.Metrics import Metrics
-from core.Runner import Runner
+from hostplot.core import Config
+from hostplot.core.Api import *
+from hostplot.core.Cache import Cache
+from hostplot.core.Metrics import Metrics
+from hostplot.core.Runner import Runner
 
 APP_VERSION = 0.1
 DEFAULT_APP_NAME="hostplot"

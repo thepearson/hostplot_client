@@ -1,4 +1,4 @@
-from core.Client import Client
+from hostplot.core.Client import Client
 
 class Api():
   def __init__(self, config):

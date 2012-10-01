@@ -1,7 +1,7 @@
 import time
-from metrics.Metric import Metric
-from metrics.LoadAvg import LoadAvg
-from metrics.Memory import Memory
+from hostplot.metrics.Metric import Metric
+from hostplot.metrics.LoadAvg import LoadAvg
+from hostplot.metrics.Memory import Memory
 
 class Runner():
   '''
@@ -10,7 +10,7 @@ class Runner():
   def __init__(self, metrics):
     #self.config = config
     self.metrics = metrics
-    
+
   def run(self):
     response = {}
     for m in self.metrics:
@@ -22,7 +22,7 @@ class Runner():
 
       if c.lower() == 'loadavg':
         metric = LoadAvg(data)
-      elif c.lower() == 'memory':         
+      elif c.lower() == 'memory':
         metric = Memory(data)
       else:
         print 'unknown metric'
@@ -36,12 +36,12 @@ class Runner():
             print 'Data validation failed'
         else:
           print 'System requirements failed'
-          
+
         metric.post()
-      
+
       if len(metric.messages) is not 0:
         response[c] = metric.messages
       else:
         response[c] = metric.data
-    
+
     return {str(int(time.time())): response}

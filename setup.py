@@ -1,6 +1,40 @@
 #!/usr/bin/env python
+import os
+import subprocess
 
-from distutils.core import setup
+from distutils.core import setup, Command
+
+
+class SetupBuildCommand(Command):
+    """
+    Master setup build command to subclass from.
+    """
+
+    user_options = []
+
+    def initialize_options(self):
+        """
+        Setup the current dir.
+        """
+        self._dir = os.getcwd()
+
+    def finalize_options(self):
+        """
+        Set final values for all the options that this command supports.
+        """
+        pass
+
+
+#class TODOCommand(SetupBuildCommand):
+    """
+    Quick command to show code TODO's.
+    """
+    # See Figure 4
+class SetupUsers(SetupBuildCommand):
+
+  def run(self):
+    cmd = ''
+
 
 setup(name = "hostplot",
     version = "0.1",
@@ -14,12 +48,14 @@ setup(name = "hostplot",
 
     license = "GPLv3+",
 
-    package_dir = {'myapp': 'src/myapp'},
-    packages = ['myapp'],
+    package_dir = {'hostplot': 'src/client'},
+    packages = ['hostplot'],
 
     classifiers = [
         'License :: OSI Approved :: GNU General Public License (GPL)',
         'Development Status :: 5 - Production/Stable',
         'Topic :: Software Development :: Libraries :: Python Modules',
         'Programming Language :: Python'],
+
+    #cmdclass = {'name': CommandClass}
 )
