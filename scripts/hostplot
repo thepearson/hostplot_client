@@ -141,22 +141,31 @@ if __name__ == "__main__":
   parser.add_option('-d', '--dry-run', action="store_true", dest='dry', help='Dry run (no communication with server)')
   (opts, args) = parser.parse_args()
 
+  if opts.config is not None:
+    config = opts.config
+  else:
+    config = DEFAULT_CONFIG_FILE
+
+  try:
+    open(config, "r")
+  except:
+    print "Config file doesn't exist, please specify one or initialize the host first"
+    parser.print_help()
+    quit()
+
   if opts.init is not None:
     initialize(opts.init)
   else:
     if opts.update is True:
       if opts.config is not None:
-        update(Config.Config(opts.config))
+        update(Config.Config(config))
       else:
-        update(Config.Config(DEFAULT_CONFIG_FILE))
+        update(Config.Config(config))
     else:
       dry = False
       if opts.dry is not None:
         dry = True
 
-      if opts.config is not None:
-        main(Config.Config(opts.config), dry)
-      else:
-        main(Config.Config(DEFAULT_CONFIG_FILE), dry)
+      main(Config.Config(config), dry)
 
   exit()

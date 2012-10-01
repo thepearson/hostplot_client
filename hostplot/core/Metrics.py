@@ -3,27 +3,26 @@ import time
 from hostplot.core.Api import *
 from hostplot.core.Config import Config
 
-'''
-This is a wrapper around the metrics
-configuration, abstrcted out into
-this class for now as we may want to change
-how all this is managed at a later date
-'''
 class Metrics():
+  """
+  This is a wrapper around the metrics
+  configuration, abstrcted out into
+  this class for now as we may want to change
+  how all this is managed at a later date
+  """
 
-  '''
-  Takes a config object
-  '''
   def __init__(self, config, dry=False):
+    """
+    Takes a config object
+    """
     self.config = config
     if dry is False:
       self.update()
 
-
-  '''
-  Check to see if we should update the metrics
-  '''
   def update(self):
+    """
+    Check to see if we should update the metrics
+    """
     last_updated = self.config.getint('metrics_last', 'config')
     ttl = self.config.getint('metrics_ttl', 'config')
     if last_updated + ttl < int(time.time()):
@@ -51,10 +50,10 @@ class Metrics():
     # up to date
     return True
 
-  '''
-  get the metrics to run and the associated data
-  '''
   def get(self):
+    """
+    get the metrics to run and the associated data
+    """
     metrics = []
     items = self.config.getSection('metrics');
     for i in items:
@@ -64,9 +63,8 @@ class Metrics():
       metrics.append(item)
     return metrics
 
-
-  '''
-  Set the metrics that we are to run
-  '''
   def set(self, metrics):
+    """
+    Set the metrics that we are to run
+    """
     return True;
