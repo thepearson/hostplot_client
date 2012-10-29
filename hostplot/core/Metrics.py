@@ -21,11 +21,11 @@ class Metrics():
 
   def update(self):
     """
-    Check to see if we should update the metrics
+    Check to see if we should update the stored metric config
     """
-    last_updated = self.config.getint('metrics_last', 'config')
-    ttl = self.config.getint('metrics_ttl', 'config')
-    if last_updated + ttl < int(time.time()):
+    if self.update_required(self.config.getint('metrics_last', 'config'),
+                            self.config.getint('metrics_ttl', 'config'),
+                            int(time.time())):
 
       config_api = ConfigApi(self.config)
 
@@ -50,6 +50,20 @@ class Metrics():
     # up to date
     return True
 
+
+  def update_required(self, last_run, ttl, time_now = None):
+    """
+    Retruns bool if metric config needs updating, false otherwise
+    """
+    if time_now is None:
+      time_now = int(time.time())
+
+    if (last_run + ttl) < time_now:
+      return True
+
+    return False
+
+
   def get(self):
     """
     get the metrics to run and the associated data
@@ -58,9 +72,14 @@ class Metrics():
     items = self.config.getSection('metrics');
     for i in items:
       item = {}
-      item['key'] = i[0]
-      item['data'] = i[1]
-      metrics.append(item)
+      if i[0] is not None:
+        item['key'] = i[0]
+        try:
+          item['data'] = json.loads(i[1])
+        except ValueError:
+          item['data'] = None
+
+        metrics.append(item)
     return metrics
 
   def set(self, metrics):

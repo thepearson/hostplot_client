@@ -1,67 +1,82 @@
 import ConfigParser
 import json
 
-
-'''
-Wrapper around ConfigParser
-complicates things slightly but I wanted to abstract this
-out as this may change at a later date
-'''
 class Config():
+  """
+  Wrapper around ConfigParser
+  complicates things slightly but I wanted to abstract this
+  out as this may change at a later date
+  """
 
-  '''
-  Construct, takes a file path
-  '''
   def __init__(self, file):
     self.file = file
     self.load()
 
-  '''
-  Load the config file
-  '''
+  def exists(self):
+    """
+    Ensures that the config file exists and is writeable
+    """
+    try:
+      open(self.file, 'rw')
+      return True
+    except:
+      return False
+
   def load(self):
+    """
+    Load the config file
+    """
     self.parser = ConfigParser.SafeConfigParser()
     self.parser.read(self.file)
 
-  '''
-  adds a variable and value to a section, creates
-  the section if it doesn't exists
-  '''
   def add(self, variable, value, section = 'main'):
+    """
+    adds a variable and value to a section, creates
+    the section if it doesn't exists
+    """
+    if section.strip() == '':
+      return None
+
+    if variable.strip() == '':
+      return None
+
     if self.parser.has_section(section) == False:
       self.parser.add_section(section)
-    self.parser.set(section, variable, value)
 
-  '''
-  Writes the config to the file
-  '''
+    self.parser.set(section, variable, value)
+    return True
+
   def save(self):
+    """
+    Writes the config to the file
+    """
     f = open(self.file, 'w')
     self.parser.write(f)
     f.close()
+    return True
 
-  '''
-  Wrapper around parser.getint()
-  '''
   def getint(self, variable, section = 'main'):
+    """
+    Wrapper around parser.getint()
+    """
     try:
       return self.parser.getint(section, variable)
     except:
       return None;
 
-  '''
-  Wrapper around parser.get()
-  '''
   def get(self, variable, section = 'main'):
+    """
+    Wrapper around parser.get()
+    """
     try:
       return self.parser.get(section, variable)
     except:
       return None;
 
-  '''
-  returns all items and values given a section
-  '''
   def getSection(self, section):
+    """
+    returns all items and values given a section
+    """
     try:
       return self.parser.items(section)
     except:

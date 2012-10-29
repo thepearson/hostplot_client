@@ -1,7 +1,7 @@
 import unittest
 from hostplot.core.Client import Client
 
-class ClientTestCase(unittest.TestCase):
+class CoreClientTestCase(unittest.TestCase):
   def setUp(self):
     unittest.TestCase.setUp(self)
     self.client = Client('api.hostplot.me')
