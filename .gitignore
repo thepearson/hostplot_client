@@ -9,3 +9,6 @@ Thumbs.db
 .settings
 .settings/*
 fabfile.py
+/build
+/dist
+/hostplot.egg-info
