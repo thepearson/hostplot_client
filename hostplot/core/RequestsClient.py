@@ -13,7 +13,10 @@ class RequestsClient():
     """ GET request to a server """
     response = requests.get(self.protocol + '://' + self.host + self.root_path + action, params=args)
     if str(response.status_code)[:1] == '2':
-      return response.json
+      try:
+        return response.json
+      except:
+        return json.loads(response.content)
     else:
       return None
 
