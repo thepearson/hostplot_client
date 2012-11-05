@@ -1,5 +1,5 @@
 import unittest
-from hostplot.core.Client import Client
+from hostplot.core.RequestsClient import RequestsClient as Client
 
 class CoreClientTestCase(unittest.TestCase):
   def setUp(self):
@@ -8,15 +8,15 @@ class CoreClientTestCase(unittest.TestCase):
 
   def test_get(self):
     data = self.client.getRequest('/testing')
-    self.assertEqual(data, '1', 'GET response equals 1')
+    self.assertEqual(data, 1, 'GET response equals 1')
 
   def test_put(self):
     data = self.client.putRequest('/testing/1', {'dummy':'data'})
-    self.assertTrue(data, 'PUT response is True')
+    self.assertEqual(data, 1, 'PUT response is True')
 
   def test_post(self):
     data = self.client.postRequest('/testing', {'dummy':'data'})
-    self.assertTrue(data, 'POST response equals True')
+    self.assertEqual(data, 1, 'POST response equals True')
 
   def test_delete(self):
     data = self.client.deleteRequest('/testing/1', {'dummy':'data'})

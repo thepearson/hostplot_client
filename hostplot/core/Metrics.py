@@ -31,7 +31,7 @@ class Metrics():
 
       new_config_json = config_api.getLatestConfig()
       if new_config_json is not None:
-        new_config = json.loads(new_config_json)
+        new_config = new_config_json
 
         if new_config.has_key('metrics'):
 

@@ -31,12 +31,13 @@ class Client():
 
   def postRequest(self, action, args=None):
     """ POST a request to a server """
+    json_data = 'json data:::: ' + json.dumps(args)
     opener = urllib2.build_opener(urllib2.HTTPHandler)
-    request = urllib2.Request(self.protocol + '://' + self.host + self.root_path + action, data=json.dumps(args))
+    request = urllib2.Request(self.protocol + '://' + self.host + self.root_path + action, data=json_data)
     request.add_header('Accept', 'application/json')
     request.get_method = lambda: 'POST'
     try:
-      response = opener.open(request, timeout=5)
+      response = opener.open(request, timeout=5000)
       response.read()
       return True
     except urllib2.HTTPError:
@@ -47,11 +48,12 @@ class Client():
   def putRequest(self, action, args=None):
     """ PUT request to a server """
     opener = urllib2.build_opener(urllib2.HTTPHandler)
-    request = urllib2.Request(self.protocol + '://' + self.host + self.root_path + action, data=json.dumps(args))
+    json_data = json.dumps(args)
+    request = urllib2.Request(self.protocol + '://' + self.host + self.root_path + action, data=json_data)
     request.add_header('Accept', 'application/json')
     request.get_method = lambda: 'PUT'
     try:
-      response = opener.open(request, timeout=5)
+      response = opener.open(request, timeout=5000)
       response.read()
       return True
     except urllib2.HTTPError:
@@ -64,7 +66,7 @@ class Client():
     request.add_header('Content-Type', 'application/json')
     request.get_method = lambda: 'DELETE'
     try:
-      response = opener.open(request, timeout=5)
+      response = opener.open(request, timeout=5000)
       response.read()
       return True
     except urllib2.HTTPError:

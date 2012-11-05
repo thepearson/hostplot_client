@@ -48,15 +48,13 @@ def main(config, dry):
   if dry is not True:
     # returned data
     api = MetricsApi(config)
-    reponse = api.saveHostMetrics(data)
-
-    if reponse is None:
+    response = api.saveHostMetrics(data)
+    if response is None:
       print "Metrics not saved, transmission issues"
       cache.cache_save(metrics)
     else:
       if cache.has_cache() is True:
         cache.cache_clear()
-    print data
   else:
     print data
 

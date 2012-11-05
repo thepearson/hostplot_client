@@ -1,9 +1,9 @@
-from hostplot.core.Client import Client
+from hostplot.core.RequestsClient import RequestsClient as Client
 
 class Api():
   def __init__(self, config):
     self.config = config
-    self.client = Client(protocol = self.config.get('protocol', 'api'), host = self.config.get('host', 'api'))
+    self.client = Client(protocol = self.config.get('protocol', 'api'), host = self.config.get('host', 'api'), debug=True)
 
 
 class ConfigApi(Api):

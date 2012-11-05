@@ -22,7 +22,6 @@ class LoadAvg(Metric):
       return False
 
   def validate(self):
-    print self.data
     if self.data is None:
       self.messages.append('Data has not been set')
     else:
