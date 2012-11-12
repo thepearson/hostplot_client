@@ -15,11 +15,11 @@ except ImportError:
 
 
 def get_version():
-    INIT = os.path.abspath(os.path.join(os.path.dirname(__file__), 'hostplot', '__init__.py'))
+    INIT = os.path.abspath(os.path.join(os.path.dirname(__file__), 'scripts', 'hostplot'))
     f = open(INIT, 'r')
     try:
         for line in f:
-            if line.startswith('__version__'):
+            if line.startswith('APP_VERSION'):
                 ret = eval(line.strip().split(' = ')[1])
                 assert ret.count('.') == 2, ret
                 for num in ret.split('.'):
@@ -49,10 +49,10 @@ def main():
         description='A hostplot client written in python',
         long_description=get_description(),
         provides = ['hostplot'],
-        requires = ['python (>= 2.7)'],
+        requires = ['python (>= 2.4)', 'json', 'os', 'optparse', 'sys', 'psutil'],
         keywords=['monitoring',],
         author='Craig Pearson',
-        author_email='thepearson@gmail.com',
+        author_email='thepearson <at> gmail <dot> com',
         maintainer='Craig Pearson',
         maintainer_email='thepearson <at> gmail <dot> com',
         url='http://code.google.com/h/hostplot/',
@@ -61,17 +61,16 @@ def main():
         packages=['hostplot', 'hostplot.core', 'hostplot.metrics'],
         scripts = ["scripts/hostplot"],
         classifiers=[
-              'Development Status :: 5 - Production/Stable',
+              'Development Status :: 3 - Alpha',
               'Environment :: Console',
               'Operating System :: MacOS :: MacOS X',
-              'Operating System :: Microsoft',
-              'Operating System :: Microsoft :: Windows :: Windows NT/2000',
               'Operating System :: POSIX',
               'Operating System :: POSIX :: Linux',
-              'Operating System :: POSIX :: BSD :: FreeBSD',
-              'Operating System :: OS Independent',
               'Programming Language :: C',
               'Programming Language :: Python',
+              'Programming Language :: Python :: 2.4',
+              'Programming Language :: Python :: 2.5',
+              'Programming Language :: Python :: 2.6',
               'Programming Language :: Python :: 2.7',
               'Programming Language :: Python :: 3',
               'Programming Language :: Python :: 3.0',
@@ -84,11 +83,9 @@ def main():
               'Topic :: System :: Hardware',
               'Topic :: System :: Systems Administration',
               'Topic :: Utilities',
-              'Topic :: Software Development :: Libraries',
-              'Topic :: Software Development :: Libraries :: Python Modules',
               'Intended Audience :: Developers',
               'Intended Audience :: System Administrators',
-              'License :: OSI Approved :: BSD License',
+              'License :: OSI Approved :: GNU General Public License (GPL)',
               ],
         )
     setup(**setup_args)

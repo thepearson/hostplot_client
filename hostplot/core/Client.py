@@ -1,6 +1,5 @@
 import urllib
 import urllib2
-import json
 
 class Client():
   def __init__(self, host, protocol = 'http', root_path = '', debug = False):
@@ -21,7 +20,13 @@ class Client():
 
     try:
       response = urllib2.urlopen(url,timeout=5).read()
-      return response
+      try:
+        import json
+      except:
+        import simplejson as json
+
+      return json.loads(response)
+
     except urllib2.HTTPError:
       return None
     except urllib2.URLError:
@@ -74,4 +79,4 @@ class Client():
 
   def decodeResponse(self, response):
     """ json decodes a response """
-    return json.loads(response)
+    return response;

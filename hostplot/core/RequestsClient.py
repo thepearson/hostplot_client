@@ -1,5 +1,7 @@
-import requests
-import json
+try:
+  import requests
+except:
+  raise Exception("Requests library not installed")
 
 class RequestsClient():
 
@@ -16,6 +18,10 @@ class RequestsClient():
       try:
         return response.json
       except:
+        try:
+          import json
+        except:
+          import simplejson as json
         return json.loads(response.content)
     else:
       return None

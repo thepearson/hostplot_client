@@ -1,7 +1,11 @@
-import json
 import time
 from hostplot.core.Api import *
 from hostplot.core.Config import Config
+
+try:
+  import json
+except:
+  import simplejson as json
 
 class Metrics():
   """

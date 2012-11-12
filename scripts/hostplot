@@ -12,7 +12,7 @@ from hostplot.core.Cache import Cache
 from hostplot.core.Metrics import Metrics
 from hostplot.core.Runner import Runner
 
-APP_VERSION = 0.1
+APP_VERSION = "0.0.3"
 DEFAULT_APP_NAME="hostplot"
 DEFAULT_METRIC_NAME="metrics"
 DEFAULT_TMP_DIR='/tmp'
@@ -22,7 +22,10 @@ DEFAULT_API_PROTOCOL='http'
 DEFAULT_API_SERVER="hostplot.api.local"
 #DEFAULT_API_PORT='80'
 DEFAULT_API_PATH=''
-SERVER_INIT_PATH='/host'
+
+
+def get_version():
+  return APP_VERSION
 
 '''
 Run default action
@@ -59,6 +62,26 @@ def main(config, dry):
     print data
 
 
+def prompt(prompt_str="Confirm", allow_empty=False, default=False):
+  fmt = (prompt_str, 'y', 'n') if default else (prompt_str, 'n', 'y')
+
+  if allow_empty:
+    prompt = '%s [%s]|%s: ' % fmt
+  else:
+    prompt = '%s %s|%s: ' % fmt
+
+  while True:
+    ans = raw_input(prompt).lower()
+
+    if ans == '' and allow_empty:
+      return default
+    elif ans == 'y':
+      return True
+    elif ans == 'n':
+      return False
+    else:
+      print prompt_str
+
 '''
 Initialize the host
 '''
@@ -88,20 +111,20 @@ def initialize(code):
   config.add('path', DEFAULT_API_PATH, 'api')
   config.add('code', code)
 
-  print 'Initializing host with code "' + code +'"'
-  client = Client.Client(protocol = DEFAULT_API_PROTOCOL, host = DEFAULT_API_SERVER)
-  # 'system': uname[0],
-  # 'node': uname[1],
-  json = client.getRequest(SERVER_INIT_PATH + '/' + code + '/activate')
-  obj = client.decodeResponse(json)
+  client = InitApi(config);
+  obj = client.activateHost(code);
 
-  if obj['status'] is 0:
-    print 'Success'
-    host_uuid = obj['result']['uuid']
-    config.add('uuid', host_uuid)
-    updateHostInfo(obj['result'])
-  else:
-    print 'Failed: ' + obj['message']
+  try:
+    if obj['status'] is 0:
+      print 'Success'
+      host_uuid = obj['result']['uuid']
+      config.add('uuid', host_uuid)
+      updateHostInfo(obj['result'])
+    else:
+      print 'Failed: ' + obj['message']
+      exit()
+  except:
+    print "Host code is invalid, please try again."
     exit()
 
   print 'Host is now active, please set up the following cron job:\n\n\n'
