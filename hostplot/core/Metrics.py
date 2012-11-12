@@ -32,10 +32,8 @@ class Metrics():
                             int(time.time())):
 
       config_api = ConfigApi(self.config)
-
       new_config_json = config_api.getLatestConfig()
 
-      print new_config_json
       if new_config_json is not None:
         new_config = new_config_json
 
