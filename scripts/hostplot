@@ -12,16 +12,15 @@ from hostplot.core.Cache import Cache
 from hostplot.core.Metrics import Metrics
 from hostplot.core.Runner import Runner
 
-APP_VERSION = "0.0.3"
+APP_VERSION = "0.30"
 DEFAULT_APP_NAME="hostplot"
 DEFAULT_METRIC_NAME="metrics"
 DEFAULT_TMP_DIR='/tmp'
 DEFAULT_CONFIG_FILE="/etc/" + DEFAULT_APP_NAME + ".conf"
-DEFAULT_LIBRARY_PATH="/usr/local/lib/" + DEFAULT_APP_NAME
 DEFAULT_API_PROTOCOL='http'
-DEFAULT_API_SERVER="hostplot.api.local"
-#DEFAULT_API_PORT='80'
-DEFAULT_API_PATH=''
+DEFAULT_API_SERVER="api.hostplot.me"
+DEFAULT_API_PATH="/client"
+DEFAULT_METRIC_TTL="30"
 
 
 def get_version():
@@ -89,8 +88,7 @@ def initialize(code):
   print "Initializing " + code
 
   while True:
-    sys.stdout.write('Config file path?: [' + DEFAULT_CONFIG_FILE + '] ')
-    config_file = raw_input().lower()
+    config_file = raw_input('Config file path?: [' + DEFAULT_CONFIG_FILE + '] ').lower()
     if str(config_file).strip() == '':
       config_file = DEFAULT_CONFIG_FILE
       break
@@ -108,18 +106,20 @@ def initialize(code):
   config = Config.Config(config_file)
   config.add('protocol', DEFAULT_API_PROTOCOL, 'api')
   config.add('host', DEFAULT_API_SERVER, 'api')
-  config.add('path', DEFAULT_API_PATH, 'api')
+  config.add('metric_path', DEFAULT_API_PATH, 'api')
   config.add('code', code)
+
+  config.add('metrics_ttl', DEFAULT_METRIC_TTL, 'config')
+  config.add('metrics_last', "0", 'config')
 
   client = InitApi(config);
   obj = client.activateHost(code);
 
   try:
-    if obj['status'] is 0:
-      print 'Success'
-      host_uuid = obj['result']['uuid']
+    if obj['uuid'] is not None:
+      host_uuid = obj['uuid']
       config.add('uuid', host_uuid)
-      updateHostInfo(obj['result'])
+      updateHostInfo(config, obj)
     else:
       print 'Failed: ' + obj['message']
       exit()
@@ -127,30 +127,28 @@ def initialize(code):
     print "Host code is invalid, please try again."
     exit()
 
-  print 'Host is now active, please set up the following cron job:\n\n\n'
-  print '*\t*\t*\t*\t*\tpython ' +  os.getcwd() + '/' + DEFAULT_APP_NAME + ' -c ' + config_file
+  print 'Host is now active, please set up the following cron job:\n\n'
+  print '*\t*\t*\t*\t*\tpython ' +  os.getcwd() + '/' + DEFAULT_APP_NAME + ' -c ' + config_file + '\n\n'
   config.save()
   exit()
 
 
 def update(config):
-  #config = Config.Config(config_file)
+  """ retrieves info from the server then updates the server with local vars """
   uuid = config.get('uuid')
-  client = Client.Client(protocol = DEFAULT_API_PROTOCOL, host = DEFAULT_API_SERVER)
-  json = client.getRequest(SERVER_INIT_PATH + '/' + uuid)
-  obj = client.decodeResponse(json)
-  updateHostInfo(obj['result'])
+  client = HostApi(config)
+  host_model = client.getHostInfo(uuid)
+  updateHostInfo(config, host_model)
 
-
-def updateHostInfo(model):
+def updateHostInfo(config, model):
+  """ updates the server with local variables """
   model['client_version'] = APP_VERSION
   model['hostname'] = platform.node()
   model['platform'] = platform.system()
-  client = Client.Client(protocol = DEFAULT_API_PROTOCOL, host = DEFAULT_API_SERVER, debug = True)
-  json = client.putRequest(SERVER_INIT_PATH + '/' + str(model['id']), model)
-  obj = client.decodeResponse(json)
-  print obj
-  return
+
+  client = HostApi(config)
+  host_model = client.updateHostInfo(model)
+
 
 
 if __name__ == "__main__":
@@ -167,16 +165,16 @@ if __name__ == "__main__":
   else:
     config = DEFAULT_CONFIG_FILE
 
-  try:
-    open(config, "r")
-  except:
-    print "Config file doesn't exist, please specify one or initialize the host first"
-    parser.print_help()
-    quit()
-
   if opts.init is not None:
     initialize(opts.init)
   else:
+    try:
+      open(config, "r")
+    except:
+      print "Config file doesn't exist, please specify one or initialize the host first"
+      parser.print_help()
+      quit()
+
     if opts.update is True:
       if opts.config is not None:
         update(Config.Config(config))

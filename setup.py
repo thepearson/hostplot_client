@@ -21,7 +21,7 @@ def get_version():
         for line in f:
             if line.startswith('APP_VERSION'):
                 ret = eval(line.strip().split(' = ')[1])
-                assert ret.count('.') == 2, ret
+                assert ret.count('.') == 1, ret
                 for num in ret.split('.'):
                     assert num.isdigit(), ret
                 return ret

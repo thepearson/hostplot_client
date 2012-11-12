@@ -26,7 +26,10 @@ class Config():
     Load the config file
     """
     self.parser = ConfigParser.SafeConfigParser()
-    self.parser.read(self.file)
+    try:
+      self.parser.read(self.file)
+    except:
+      print "Config file doesn't exist"
 
   def add(self, variable, value, section = 'main'):
     """

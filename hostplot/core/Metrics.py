@@ -34,6 +34,8 @@ class Metrics():
       config_api = ConfigApi(self.config)
 
       new_config_json = config_api.getLatestConfig()
+
+      print new_config_json
       if new_config_json is not None:
         new_config = new_config_json
 
@@ -59,6 +61,9 @@ class Metrics():
     """
     Retruns bool if metric config needs updating, false otherwise
     """
+    if last_run is None:
+      return True
+
     if time_now is None:
       time_now = int(time.time())
 

@@ -13,11 +13,20 @@ class Api():
 class ConfigApi(Api):
   def getLatestConfig(self):
     """ returns the latest host config from the server """
-    uuid = self.config.get('uuid')
-    return self.client.getRequest(SERVER_HOST_PATH + '/' + uuid + '/config')
+    return self.client.getRequest(SERVER_HOST_PATH + '/' + self.config.get('uuid') + '/config')
+
+class HostApi(Api):
+  def getHostInfo(self, uuid):
+    """ gets the host info from the server """
+    return self.client.getRequest(SERVER_HOST_PATH + '/' + uuid)
+
+  def updateHostInfo(self, host_model):
+    """ updates host info at the server """
+    return self.client.putRequest(SERVER_HOST_PATH + '/' + str(host_model['id']), host_model)
 
 class InitApi(Api):
   def activateHost(self, host_id):
+    """ activate a host """
     return self.client.getRequest(SERVER_HOST_PATH + '/' + host_id + '/activate')
 
 class MetricsApi(Api):

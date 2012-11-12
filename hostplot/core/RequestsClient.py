@@ -3,6 +3,14 @@ try:
 except:
   raise Exception("Requests library not installed")
 
+try:
+  import json
+except:
+  try:
+    import simplejson as json
+  except:
+    raise Exception("No JSON parser")
+
 class RequestsClient():
 
   def __init__(self, host, protocol = 'http', root_path = '', debug = False):
@@ -36,7 +44,7 @@ class RequestsClient():
 
   def putRequest(self, action, args=None):
     """ GET request to a server """
-    response = requests.get(self.protocol + '://' + self.host + self.root_path + action, data=json.dumps(args))
+    response = requests.put(self.protocol + '://' + self.host + self.root_path + action, data=json.dumps(args))
     if str(response.status_code)[:1] == '2':
       return True
     else:
@@ -44,7 +52,7 @@ class RequestsClient():
 
   def deleteRequest(self, action, args=None):
     """ GET request to a server """
-    response = requests.get(self.protocol + '://' + self.host + self.root_path + action)
+    response = requests.delete(self.protocol + '://' + self.host + self.root_path + action)
     if str(response.status_code)[:1] == '2':
       return True
     else:

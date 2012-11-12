@@ -36,9 +36,8 @@ class Client():
 
   def postRequest(self, action, args=None):
     """ POST a request to a server """
-    json_data = 'json data:::: ' + json.dumps(args)
     opener = urllib2.build_opener(urllib2.HTTPHandler)
-    request = urllib2.Request(self.protocol + '://' + self.host + self.root_path + action, data=json_data)
+    request = urllib2.Request(self.protocol + '://' + self.host + self.root_path + action, data=json.dumps(args))
     request.add_header('Accept', 'application/json')
     request.get_method = lambda: 'POST'
     try:
@@ -53,8 +52,7 @@ class Client():
   def putRequest(self, action, args=None):
     """ PUT request to a server """
     opener = urllib2.build_opener(urllib2.HTTPHandler)
-    json_data = json.dumps(args)
-    request = urllib2.Request(self.protocol + '://' + self.host + self.root_path + action, data=json_data)
+    request = urllib2.Request(self.protocol + '://' + self.host + self.root_path + action, data=json.dumps(args))
     request.add_header('Accept', 'application/json')
     request.get_method = lambda: 'PUT'
     try:
