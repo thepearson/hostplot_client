@@ -21,41 +21,54 @@ class RequestsClient:
 
   def getRequest(self, action, args=None):
     """ GET request to a server """
-    response = requests.get(self.protocol + '://' + self.host + self.root_path + action, params=args, timeout=5)
-    if str(response.status_code)[:1] == '2':
-      try:
-        return response.json
-      except:
+    try:
+      response = requests.get(self.protocol + '://' + self.host + self.root_path + action, params=args, timeout=5)
+
+      if str(response.status_code)[:1] == '2':
         try:
-          import json
+          return response.json
         except:
-          import simplejson as json
-        return json.loads(response.content)
-    else:
+          try:
+            import json
+          except:
+            import simplejson as json
+          return json.loads(response.content)
+      else:
+        return None
+    except:
       return None
 
   def postRequest(self, action, args=None):
     """ GET request to a server """
-    response = requests.post(self.protocol + '://' + self.host + self.root_path + action, data=json.dumps(args), timeout=5)
-    if str(response.status_code)[:1] == '2':
-      return True
-    else:
+    try:
+      response = requests.post(self.protocol + '://' + self.host + self.root_path + action, data=json.dumps(args), timeout=5)
+      if str(response.status_code)[:1] == '2':
+        return True
+      else:
+        return None
+    except:
       return None
 
   def putRequest(self, action, args=None):
     """ GET request to a server """
-    response = requests.put(self.protocol + '://' + self.host + self.root_path + action, data=json.dumps(args), timeout=5)
-    if str(response.status_code)[:1] == '2':
-      return True
-    else:
+    try:
+      response = requests.put(self.protocol + '://' + self.host + self.root_path + action, data=json.dumps(args), timeout=5)
+      if str(response.status_code)[:1] == '2':
+        return True
+      else:
+        return None
+    except:
       return None
 
   def deleteRequest(self, action, args=None):
     """ GET request to a server """
-    response = requests.delete(self.protocol + '://' + self.host + self.root_path + action, timeout=5)
-    if str(response.status_code)[:1] == '2':
-      return True
-    else:
+    try:
+      response = requests.delete(self.protocol + '://' + self.host + self.root_path + action, timeout=5)
+      if str(response.status_code)[:1] == '2':
+        return True
+      else:
+        return None
+    except:
       return None
 
   def decodeResponse(self, response):
