@@ -21,7 +21,7 @@ class RequestsClient:
 
   def getRequest(self, action, args=None):
     """ GET request to a server """
-    response = requests.get(self.protocol + '://' + self.host + self.root_path + action, params=args)
+    response = requests.get(self.protocol + '://' + self.host + self.root_path + action, params=args, timeout=5)
     if str(response.status_code)[:1] == '2':
       try:
         return response.json
@@ -36,7 +36,7 @@ class RequestsClient:
 
   def postRequest(self, action, args=None):
     """ GET request to a server """
-    response = requests.post(self.protocol + '://' + self.host + self.root_path + action, data=json.dumps(args))
+    response = requests.post(self.protocol + '://' + self.host + self.root_path + action, data=json.dumps(args), timeout=5)
     if str(response.status_code)[:1] == '2':
       return True
     else:
@@ -44,7 +44,7 @@ class RequestsClient:
 
   def putRequest(self, action, args=None):
     """ GET request to a server """
-    response = requests.put(self.protocol + '://' + self.host + self.root_path + action, data=json.dumps(args))
+    response = requests.put(self.protocol + '://' + self.host + self.root_path + action, data=json.dumps(args), timeout=5)
     if str(response.status_code)[:1] == '2':
       return True
     else:
@@ -52,7 +52,7 @@ class RequestsClient:
 
   def deleteRequest(self, action, args=None):
     """ GET request to a server """
-    response = requests.delete(self.protocol + '://' + self.host + self.root_path + action)
+    response = requests.delete(self.protocol + '://' + self.host + self.root_path + action, timeout=5)
     if str(response.status_code)[:1] == '2':
       return True
     else:

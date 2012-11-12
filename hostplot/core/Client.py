@@ -19,7 +19,7 @@ class Client:
       print url
 
     try:
-      response = urllib2.urlopen(url,timeout=5).read()
+      response = urllib2.urlopen(url, timeout=5).read()
       try:
         import json
       except:
@@ -41,7 +41,7 @@ class Client:
     request.add_header('Accept', 'application/json')
     request.get_method = lambda: 'POST'
     try:
-      response = opener.open(request, timeout=5000)
+      response = opener.open(request, timeout=5)
       response.read()
       return True
     except urllib2.HTTPError:
@@ -56,7 +56,7 @@ class Client:
     request.add_header('Accept', 'application/json')
     request.get_method = lambda: 'PUT'
     try:
-      response = opener.open(request, timeout=5000)
+      response = opener.open(request, timeout=5)
       response.read()
       return True
     except urllib2.HTTPError:
@@ -69,7 +69,7 @@ class Client:
     request.add_header('Content-Type', 'application/json')
     request.get_method = lambda: 'DELETE'
     try:
-      response = opener.open(request, timeout=5000)
+      response = opener.open(request, timeout=5)
       response.read()
       return True
     except urllib2.HTTPError:
