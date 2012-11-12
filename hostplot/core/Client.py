@@ -1,7 +1,7 @@
 import urllib
 import urllib2
 
-class Client():
+class Client:
   def __init__(self, host, protocol = 'http', root_path = '', debug = False):
     self.debug = debug
     self.host = host

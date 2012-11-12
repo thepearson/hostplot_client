@@ -1,7 +1,7 @@
 '''
 Base class for all metrics
 '''
-class Metric():
+class Metric:
 
   """ any messages to be aware of """
   messages = []

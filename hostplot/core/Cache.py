@@ -1,7 +1,7 @@
 import os
 import pickle
 
-class Cache():
+class Cache:
 
   def __init__(self, cache_file):
     self.cache_file = cache_file

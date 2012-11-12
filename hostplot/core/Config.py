@@ -1,6 +1,6 @@
 import ConfigParser
 
-class Config():
+class Config:
   """
   Wrapper around ConfigParser
   complicates things slightly but I wanted to abstract this

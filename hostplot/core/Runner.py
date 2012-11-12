@@ -3,7 +3,7 @@ from hostplot.metrics.Metric import Metric
 from hostplot.metrics.LoadAvg import LoadAvg
 from hostplot.metrics.Memory import Memory
 
-class Runner():
+class Runner:
   '''
   Runner to run things
   '''

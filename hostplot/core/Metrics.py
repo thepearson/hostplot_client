@@ -7,7 +7,7 @@ try:
 except:
   import simplejson as json
 
-class Metrics():
+class Metrics:
   """
   This is a wrapper around the metrics
   configuration, abstrcted out into

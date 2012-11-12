@@ -5,7 +5,7 @@ except:
 
 SERVER_HOST_PATH='/host'
 
-class Api():
+class Api:
   def __init__(self, config):
     self.config = config
     self.client = Client(protocol = self.config.get('protocol', 'api'), host = self.config.get('host', 'api'), debug=True)

@@ -11,7 +11,7 @@ except:
   except:
     raise Exception("No JSON parser")
 
-class RequestsClient():
+class RequestsClient:
 
   def __init__(self, host, protocol = 'http', root_path = '', debug = False):
     self.debug = debug
