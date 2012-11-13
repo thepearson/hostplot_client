@@ -11,25 +11,172 @@ from hostplot.core.Api import *
 from hostplot.core.Cache import Cache
 from hostplot.core.Metrics import Metrics
 from hostplot.core.Runner import Runner
+from cherrypy.lib.sessions import close
+from cookielib import debug
 
+""" Application version number """
 APP_VERSION = "0.30"
-DEFAULT_APP_NAME="hostplot"
-DEFAULT_METRIC_NAME="metrics"
-DEFAULT_TMP_DIR='/tmp'
-DEFAULT_CONFIG_FILE="/etc/" + DEFAULT_APP_NAME + ".conf"
-DEFAULT_API_PROTOCOL='http'
-DEFAULT_API_SERVER="api.hostplot.me"
-DEFAULT_API_PATH="/client"
-DEFAULT_METRIC_TTL="30"
 
+"""
+Some application defaults, most of
+these things will be overriden by the
+conf file specified at run time.
+"""
+DEFAULT_APP_NAME = "hostplot"
+DEFAULT_METRIC_NAME = "metrics"
+DEFAULT_TMP_DIR = '/tmp'
+DEFAULT_CONFIG_FILE = "/etc/" + DEFAULT_APP_NAME + ".conf"
+DEFAULT_API_PROTOCOL = 'http'
+DEFAULT_API_SERVER = "api.hostplot.me"
+DEFAULT_API_HOST_PATH='/host'
+DEFAULT_API_METRIC_PATH = "/client"
+DEFAULT_METRIC_TTL = "30"
+
+
+"""
+Debug levels
+"""
+DEBUG_NONE = 0
+DEBUG_ERROR = 1
+DEBUG_WARNING = 2
+DEBUG_INFO = 3
+DEBUG_DEBUG = 4
+
+""" Current Debug level """
+DEBUG_LEVEL = 1
+
+def debug(message, level = DEBUG_ERROR):
+  """
+  Prints out debug messages
+    message = String to print
+    level = level to output [default DEBUG_ERROR]
+  """
+  if DEBUG_LEVEL >= level:
+    if level == DEBUG_ERROR:
+      l = "DEBUG_ERROR"
+    elif level == DEBUG_WARNING:
+      l = "DEBUG_WARNING"
+    elif level == DEBUG_INFO:
+      l = "DEBUG_INFO"
+    elif level == DEBUG_DEBUG:
+      l = "DEBUG_DEBUG"
+    else:
+      l = "DEBUG_NONE"
+    print l + " :: " + message
 
 def get_version():
+  """
+  Get application version
+    returns Float
+  """
   return APP_VERSION
 
-'''
-Run default action
-'''
-def main(config, dry):
+def updateHostInfo(config, model, client = None):
+  """
+  Updates the host data on the server with local values for
+    hostname, client version and platform
+  """
+  debug("Updating model: " + str(model), DEBUG_DEBUG)
+  if client is None:
+    debug("Client not specified creating one", DEBUG_DEBUG)
+    client = HostApi(config)
+
+  try:
+    model['client_version'] = APP_VERSION
+    model['hostname'] = platform.node()
+    model['platform'] = platform.system()
+
+    debug("Updating client config with client_version: " +
+          APP_VERSION + ", hostname: " +
+          model['hostname'] + ", platform: " +
+          model['platform'], DEBUG_DEBUG)
+
+    host_model = client.updateHostInfo(model)
+    debug("Updating host success", DEBUG_DEBUG)
+    return True
+  except:
+    return False
+
+def initialize(config):
+  """
+  Initializes the host with the API,will also set up the config file
+    config Config object
+  """
+  # get the activation code from the config
+  code = config.get('code')
+
+  # set up the host api client
+  client = HostApi(config);
+
+  # attempt to activate the host
+  obj = client.activateHost(code);
+
+  if obj is None:
+    raise Exception("Error activating client, no data returned")
+
+  try:
+    if obj['uuid'] is not None:
+      config.add('uuid', obj['uuid'])
+      updateHostInfo(config, obj, client)
+    else:
+      raise Exception("Error adding UUID to configuration")
+  except:
+    raise Exception("Host code is invalid, please try again")
+
+  try:
+    config.save()
+    return True
+  except:
+    raise Exception("Couldn't save config")
+
+def update(config):
+  """
+  Force an update of the host details to the API
+
+  config Config object
+  """
+  try:
+    uuid = config.get('uuid')
+    debug("Using uuid: [" + uuid + "]", DEBUG_ERROR)
+    client = HostApi(config)
+    host_model = client.getHostInfo(uuid)
+    debug("Returned model: " + str(host_model), DEBUG_ERROR)
+    updateHostInfo(config, host_model, client)
+    return True
+  except:
+    debug("Error updating host config", DEBUG_ERROR)
+    return False
+
+def run_command(cmd, config):
+  """
+  Selectively allows the client to perform some api
+  functions manually.
+    cmd String command to run [list, info, metrics]
+    config Config object
+  """
+  client = HostApi(config)
+
+  if cmd == 'list':
+    print '\t' + '\n\t'.join(['list - this', 'info - show some host info', 'metrics - get host metrics config'])
+    return True
+  else:
+    client = HostApi(config)
+    if cmd == 'info':
+      print client.getHostInfo(config.get('uuid'))
+      return True
+    elif cmd == 'metrics':
+      print client.getHostConfig()
+      return True
+    else:
+      print "Command not found"
+  return False
+
+def collect(config, dry = False):
+  """
+  Run and collect data, then attempt to send it to the API
+    config Config object
+    dry Boolean should this just be a dry run, (ie collect but don't send metrics)
+  """
 
   # Get the metrics
   metrics = Metrics(config, dry).get();
@@ -49,7 +196,7 @@ def main(config, dry):
 
   if dry is not True:
     # returned data
-    api = MetricsApi(config)
+    api = HostApi(config)
     response = api.saveHostMetrics(data)
     if response is None:
       print "Metrics not saved, transmission issues"
@@ -60,111 +207,101 @@ def main(config, dry):
   else:
     print data
 
+def main(opts, args):
+  """
+  Application main loop
+    opts OptParse opts
+    args OptParse args
+  """
+  if opts.config is not None:
+    debug("Config specified ["+opts.config+"]", DEBUG_DEBUG)
+    config_file = opts.config
+  else:
+    debug("No config specified using, default ["+DEFAULT_CONFIG_FILE+"]", DEBUG_DEBUG)
+    config_file = DEFAULT_CONFIG_FILE
 
-'''
-Initialize the host
-'''
-def initialize(code):
-  print "Initializing " + code
-
-  while True:
-    config_file = raw_input('Config file path?: [' + DEFAULT_CONFIG_FILE + '] ').lower()
-    if str(config_file).strip() == '':
-      config_file = DEFAULT_CONFIG_FILE
-      break
-    else:
-      try:
-        # see if it's writable
-        update = open(config_file, 'w')
-        update.close()
-      except:
-        print 'Error creating config file! Check permissions.'
-        exit()
-      break
-
-  # open config file and add api defaults
-  config = Config.Config(config_file)
-  config.add('protocol', DEFAULT_API_PROTOCOL, 'api')
-  config.add('host', DEFAULT_API_SERVER, 'api')
-  config.add('metric_path', DEFAULT_API_PATH, 'api')
-  config.add('code', code)
-
-  config.add('metrics_ttl', DEFAULT_METRIC_TTL, 'config')
-  config.add('metrics_last', "0", 'config')
-
-  client = InitApi(config);
-  obj = client.activateHost(code);
-
+  # attempt to create the config
   try:
-    if obj['uuid'] is not None:
-      host_uuid = obj['uuid']
-      config.add('uuid', host_uuid)
-      updateHostInfo(config, obj)
-    else:
-      print 'Failed: ' + obj['message']
-      exit()
+    config = Config.Config(config_file)
+    debug("Opened config options", DEBUG_DEBUG)
   except:
-    print "Host code is invalid, please try again."
-    exit()
+    print "Config file doesn't exist and/or is not writable"
+    return False
 
-  print 'Host is now active, please set up the following cron job:\n\n'
-  print '*\t*\t*\t*\t*\tpython ' +  os.getcwd() + '/' + DEFAULT_APP_NAME + ' -c ' + config_file + '\n\n'
-  config.save()
-  exit()
+  # letc check if the config is new and if so set some config defaults
+  if config.exists() is False:
+    debug("Config file is new so setting default values", DEBUG_DEBUG)
+    # add api info
+    config.add('protocol', DEFAULT_API_PROTOCOL,'api')
+    config.add('host', DEFAULT_API_SERVER, 'api')
+    config.add('host_path', DEFAULT_API_HOST_PATH, 'api')
+    config.add('metric_path', DEFAULT_API_METRIC_PATH, 'api')
 
+    # add metric info
+    config.add('metrics_ttl', DEFAULT_METRIC_TTL, 'config')
+    config.add('metrics_last', "0", 'config')
 
-def update(config):
-  """ retrieves info from the server then updates the server with local vars """
-  uuid = config.get('uuid')
-  client = HostApi(config)
-  host_model = client.getHostInfo(uuid)
-  updateHostInfo(config, host_model)
+  if opts.init is not None:
+    debug("Running initialize", DEBUG_DEBUG)
+    # initialize the host code
+    try:
+      config.add('code', opts.init)
+      debug("Initializing for code [" + opts.init + "]", DEBUG_DEBUG)
+      initialize(config)
+    except:
+      print "Failed to initialize the host with code " + opts.init
+      return False
 
-def updateHostInfo(config, model):
-  """ updates the server with local variables """
-  model['client_version'] = APP_VERSION
-  model['hostname'] = platform.node()
-  model['platform'] = platform.system()
+    print 'Host is now active, please set up the following CRON job:\n\n'
+    print '*\t*\t*\t*\t*\tpython ' +  __file__ + '/' + DEFAULT_APP_NAME + ' -c ' + config_file + '\n\n'
 
-  client = HostApi(config)
-  host_model = client.updateHostInfo(model)
+    debug("Host initialized saving config", DEBUG_DEBUG)
+    config.save()
+    return True
+  elif opts.run is not None:
+    # run a custom "GET" query
+    try:
+      debug("Running custom command [" + opts.run + "]", DEBUG_DEBUG)
+      run_command(opts.run, config)
+      return True
+    except:
+      return False
+  elif opts.update is not None:
+    try:
+      update(config)
+      return True
+    except:
+      return False
+  else:
+    dry = False
+    if opts.dry is not None:
+      dry = True
 
+    try:
+      collect(config, dry)
+      return True
+    except:
+      return False
 
 
 if __name__ == "__main__":
   # parse cmd line arguments
   parser = optparse.OptionParser()
   parser.add_option('-i', '--init', help='Install and initialise host', dest='init')
-  parser.add_option('-c', '--config', help='Config file to use', dest='config')
+  parser.add_option('-r', '--run', help='Run custom host GET command and output the results', dest='run')
   parser.add_option('-u', '--update', action="store_true",  dest='update', help='Check for updates')
-  parser.add_option('-d', '--dry-run', action="store_true", dest='dry', help='Dry run (no communication with server)')
+
+  parser.add_option('-c', '--config', help='Config file to use', dest='config')
+  parser.add_option('-f', '--fake-run', action="store_true", dest='dry', help='Dry run (no communication with server)')
+  parser.add_option('-d', '--debug', help='Choose a debug level', dest='debug')
   (opts, args) = parser.parse_args()
 
-  if opts.config is not None:
-    config = opts.config
+  if opts.debug is not None:
+    DEBUG_LEVEL = int(opts.debug)
+
+  if main(opts, args) is True:
+    debug("Success", DEBUG_DEBUG)
+    exit(0)
   else:
-    config = DEFAULT_CONFIG_FILE
-
-  if opts.init is not None:
-    initialize(opts.init)
-  else:
-    try:
-      open(config, "r")
-    except:
-      print "Config file doesn't exist, please specify one or initialize the host first"
-      parser.print_help()
-      quit()
-
-    if opts.update is True:
-      if opts.config is not None:
-        update(Config.Config(config))
-      else:
-        update(Config.Config(config))
-    else:
-      dry = False
-      if opts.dry is not None:
-        dry = True
-
-      main(Config.Config(config), dry)
-
-  exit()
+    debug("Failed", DEBUG_DEBUG)
+    exit(1)

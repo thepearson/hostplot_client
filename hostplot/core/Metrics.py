@@ -31,8 +31,8 @@ class Metrics:
                             self.config.getint('metrics_ttl', 'config'),
                             int(time.time())):
 
-      config_api = ConfigApi(self.config)
-      new_config_json = config_api.getLatestConfig()
+      client = HostApi(self.config)
+      new_config_json = client.getHostConfig()
 
       if new_config_json is not None:
         new_config = new_config_json
