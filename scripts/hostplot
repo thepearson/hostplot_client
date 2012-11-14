@@ -6,6 +6,11 @@ import time
 import platform
 import optparse
 
+try:
+  import json
+except:
+  import simplejson as json
+
 from hostplot.core import Config
 from hostplot.core.Api import *
 from hostplot.core.Cache import Cache
@@ -15,7 +20,7 @@ from cherrypy.lib.sessions import close
 from cookielib import debug
 
 """ Application version number """
-APP_VERSION = "0.30"
+APP_VERSION = "0.31"
 
 """
 Some application defaults, most of
@@ -213,6 +218,21 @@ def main(opts, args):
     opts OptParse opts
     args OptParse args
   """
+  if opts.metric is not None:
+    debug("Running custom metric [" + opts.metric + "]", DEBUG_DEBUG)
+    if opts.metric_data is not None:
+      debug("Metrics using provided data [" + opts.metric_data + "]", DEBUG_DEBUG)
+      data = opts.metric_data
+    else:
+      data = None
+
+    metrics = {}
+    metrics['key'] = str(opts.metric)
+    metrics['data'] = data
+    metric = Runner([metrics])
+    print metric.run();
+    return True;
+
   if opts.config is not None:
     debug("Config specified ["+opts.config+"]", DEBUG_DEBUG)
     config_file = opts.config
@@ -290,10 +310,12 @@ if __name__ == "__main__":
   parser.add_option('-i', '--init', help='Install and initialise host', dest='init')
   parser.add_option('-r', '--run', help='Run custom host GET command and output the results', dest='run')
   parser.add_option('-u', '--update', action="store_true",  dest='update', help='Check for updates')
+  parser.add_option('-m', '--metric', dest='metric', help='Don\'t bootstrap, run a metric locally, and see the output')
+  parser.add_option('-d', '--data', dest='metric_data', help='Optional data param for metrics')
 
   parser.add_option('-c', '--config', help='Config file to use', dest='config')
   parser.add_option('-f', '--fake-run', action="store_true", dest='dry', help='Dry run (no communication with server)')
-  parser.add_option('-d', '--debug', help='Choose a debug level', dest='debug')
+  parser.add_option('-D', '--debug', help='Choose a debug level', dest='debug')
   (opts, args) = parser.parse_args()
 
   if opts.debug is not None:

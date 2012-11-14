@@ -1,7 +1,14 @@
 import time
+
+try:
+  import json
+except:
+  import simplejson as json
+
 from hostplot.metrics.Metric import Metric
 from hostplot.metrics.LoadAvg import LoadAvg
 from hostplot.metrics.Memory import Memory
+from hostplot.metrics.Disk import Disk
 
 class Runner:
   '''
@@ -11,21 +18,26 @@ class Runner:
     #self.config = config
     self.metrics = metrics
 
+  def get_metric(self, metric_string, data = None):
+    if metric_string.lower() == 'loadavg':
+      return LoadAvg(data)
+    elif metric_string.lower() == 'memory':
+      return Memory(data)
+    elif metric_string.lower() == 'disk':
+      return Disk(data)
+    else:
+      raise Exception("Unknown metric" + metric_string)
+
   def run(self):
     response = {}
     for m in self.metrics:
       c = m['key']
       if m['data'] is not None:
-        data = m['data']
+        data = json.loads(m['data'])
       else:
         data = None
 
-      if c.lower() == 'loadavg':
-        metric = LoadAvg(data)
-      elif c.lower() == 'memory':
-        metric = Memory(data)
-      else:
-        print 'unknown metric'
+      metric = self.get_metric(c, data)
 
       if metric.runnable() is True:
         metric.pre()
