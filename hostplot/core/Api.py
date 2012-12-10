@@ -23,11 +23,13 @@ class HostApi(Api):
     """ activate a host """
     return self.client.getRequest(self.config.get('host_path', 'api') + '/' + host_id + '/activate')
 
-  def getHostConfig(self):
+    def getHostConfig(self):
     """ returns the latest host config from the server """
-    return self.client.getRequest(self.config.get('host_path', 'api') + '/' + self.config.get('uuid') + '/config')
+    return self.client.getRequest(self.config.get('host_path', 'api') + '/' +
+    self.config.get('uuid') + '/config')
 
-  def saveHostMetrics(self, data):
-    """ saves metrics to the api """
-    return self.client.postRequest(action = self.config.get('metric_path', 'api'), args=data)
+    def saveHostMetrics(self, data):
+        """ saves metrics to the api """
+        return self.client.postRequest(action=self.config.get('metric_path',
+            'api'), args=data)
 

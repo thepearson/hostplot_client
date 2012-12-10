@@ -18,15 +18,15 @@ class Disk(Metric):
     Here we default the path to / if none is specified
     """
     if self.data is None:
-      self.data = [{'path':'/'}]
+      self.data = [{'path':'/'},{'path':'/root'}]
 
   def run(self):
     r = []
     for i in self.data:
       vol = os.statvfs(i['path'])
       d = {}
+      d['path'] = i["path"]
       d['total'] = vol.f_bsize * vol.f_blocks
-      d['free'] = vol.f_bsize * vol.f_bavail
       d['used'] = d['total'] - d['free']
       r.append(d)
     self.data = r
