@@ -7,6 +7,8 @@ import struct
 import array
 import time
 import sys
+import urllib
+import urllib2
 
 try:
   is_64bits = sys.maxsize > 2**32
@@ -18,12 +20,30 @@ except AttributeError:
 debug=False;
 
 
-def send(metric, data, key, host):
+def send(data, key, host):
   if debug:
-    print("Sending", metric, "data")
-    print("key:", key)
-    print("host:", host)
-  print(data)
+    print("Sending data")
+  try:
+    import json
+  except:
+    import simplejson as json
+
+  current_time=time.strftime('%Y-%m-%d %H:%M:%S')
+  json_string=json.dumps({current_time:data})
+
+  opener = urllib2.build_opener(urllib2.HTTPHandler)
+  request = urllib2.Request('http://api.hostplot.me/v1/metric', data=json_string)
+  request.add_header('X-Org-Key', key)
+  request.add_header('X-Host-Key', host)
+  request.get_method = lambda: 'POST'
+  try:
+    response = opener.open(request, timeout=5)
+    response.read()
+    return True
+  except urllib2.HTTPError:
+    return None
+  except:
+    return None
 
 
 def get_network_bytes(interface):
@@ -82,7 +102,7 @@ def getload():
 def getdisk():
   if debug:
     print("Getting disk information")
-  df=subprocess.Popen(["df", "-l"], stdout=subprocess.PIPE)
+  df=subprocess.Popen(["df", "-l", "-P"], stdout=subprocess.PIPE)
   disks=df.communicate()[0].decode().split("\n")[1:-1]
   found_disks={}
   for disk in disks:
@@ -121,8 +141,10 @@ def getnetwork():
     rx2,tx2=get_network_bytes(int[0])
 
     ret[int[0]] = {'addr':int[1],
-                   'rx':float((rx2-rx1)/timeout),
-                   'tx':float((tx2-tx1)/timeout)}
+                   'rx_total':rx2,
+                   'tx_total':tx2,
+                   'rx_avg':float((rx2-rx1)/timeout),
+                   'tx_avg':float((tx2-tx1)/timeout)}
 
   return ret
 
@@ -166,22 +188,24 @@ if "all" in args.metrics:
 else:
   metrics=args.metrics.split(',')
 
+data={}
 for metric in metrics:
   if debug:
     print("Processing metric", metric)
   if metric=="load":
-    data=getload()
+    data['load']=getload()
   elif metric=="disk":
-    data=getdisk()
+    data['disk']=getdisk()
   elif metric=="memory":
-    data=getmemory()
+    data['memory']=getmemory()
   elif metric=="network":
-    data=getnetwork()
+    data['network']=getnetwork()
   elif metric=="users":
-    data=getusers()
+    data['users']=getusers()
   elif metric=="processes":
-    data=getprocesses()
+    data['processes']=getprocesses()
   else:
     quit(1)
-  send(metric, data, key, host)
+
+send(data, key, host)
 
