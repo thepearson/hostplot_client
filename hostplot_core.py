@@ -7,6 +7,7 @@ import struct
 import array
 import time
 import sys
+import platform;
 import urllib
 import urllib2
 
@@ -20,7 +21,7 @@ except AttributeError:
 debug=False;
 
 
-def send(data, key, host):
+def send(data, core, key, host):
   if debug:
     print("Sending data")
   try:
@@ -29,22 +30,52 @@ def send(data, key, host):
     import simplejson as json
 
   current_time=time.strftime('%Y-%m-%d %H:%M:%S')
-  json_string=json.dumps({current_time:data})
+  json_string=json.dumps({"host": core, current_time:data})
 
   opener = urllib2.build_opener(urllib2.HTTPHandler)
   request = urllib2.Request('http://api.hostplot.me/v1/metric', data=json_string)
-  request.add_header('X-Org-Key', key)
-  request.add_header('X-Host-Key', host)
+  request.add_header('X-org-key', key)
+  request.add_header('X-host-key', host)
   request.get_method = lambda: 'POST'
-  try:
-    response = opener.open(request, timeout=5)
-    response.read()
-    return True
-  except urllib2.HTTPError:
-    return None
-  except:
-    return None
 
+  try:
+    response = opener.open(request)
+    response.read()
+    print("Success")
+    quit(0)
+  except:
+    print("Error")
+    quit(1)
+
+
+def cpu_count():
+  ''' Returns the number of CPUs in the system '''
+  num = 1
+  if sys.platform == 'win32':
+    # fetch the cpu count for windows systems
+    try:
+      num = int(os.environ['NUMBER_OF_PROCESSORS'])
+    except (ValueError, KeyError):
+      pass
+  elif sys.platform == 'darwin':
+    # fetch teh cpu count for MacOS X systems
+    try:
+      num = int(os.popen('sysctl -n hw.ncpu').read())
+    except ValueError:
+      pass
+
+  else:
+    # an finally fetch the cpu count for Unix-like systems
+    try:
+      num = os.sysconf('SC_NPROCESSORS_ONLN')
+    except (ValueError, OSError, AttributeError):
+      pass
+
+  return num
+
+
+def get_core_info():
+  return {"cpus":cpu_count(), "hostname":platform.node(),"os":platform.system()}
 
 def get_network_bytes(interface):
   f=open('/proc/net/dev', 'r')
@@ -207,5 +238,5 @@ for metric in metrics:
   else:
     quit(1)
 
-send(data, key, host)
+send(data, get_core_info(), key, host)
 
